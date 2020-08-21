@@ -7,11 +7,13 @@
     <title>Phonetic Classification</title>
 </head>
 <body>
-    <button>Save</button>
+    <button onclick="saveP()">Save</button>
     <select name="Phonetics" id="ph">
         <option value="aah">AAAH</option>   
         <option value="eee">EEE</option>
         <option value="i">I</option>
     </select>
+    <button onclick="train_nn()">Train</button>
+    <span id="result"> - </span>
 </body>
 </html>

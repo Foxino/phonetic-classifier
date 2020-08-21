@@ -1,6 +1,15 @@
-let mic, fft;
+let mic, fft, train;
+const classes = [ 'aah', 'eee', 'i' ];
+
+class trainingData {
+	constructor(clas, spect) {
+		this.class = clas;
+		this.spectrum = spect;
+	}
+}
 
 function setup() {
+	train = [];
 	createCanvas(710, 400);
 	noFill();
 
@@ -11,8 +20,13 @@ function setup() {
 }
 
 function draw() {
-	background(200);
+	background(255);
 	let spectrum = fft.analyze();
+	strokeWeight(5);
+	let c = color('hsl(160, 100%, 50%)');
+	stroke(c);
+
+	document.getElementById('result').innerHTML = classify(spectrum);
 
 	beginShape();
 	for (i = 0; i < spectrum.length; i++) {
@@ -22,10 +36,15 @@ function draw() {
 }
 
 function saveP() {
-	//pressing save should activate this function,
-	//saves the last x frames of the fft.analyze to a json for the creation of a NN to classify phonetics
+	var cl = document.getElementById('ph').selectedIndex;
+	var spect = fft.analyze();
+	train.push(new trainingData(cl, spect));
+}
+
+function train_nn() {
+	//
 }
 
 function classify() {
-	// classifies the last x frames against an NN
+	return 'N/A';
 }
