@@ -1,6 +1,10 @@
 let mic, fft, train;
 const classes = [ 'aah', 'eee', 'i' ];
 
+const inputSize = 1024; //defaults to 1024, needs to be power of 2.
+let inputShape = Math.sqrt(inputSize);
+let numClasses = classes.length;
+
 class trainingData {
 	constructor(clas, spect) {
 		this.class = clas;
@@ -42,9 +46,21 @@ function saveP() {
 }
 
 function train_nn() {
-	//
+	// create a conv neural network
+	const m = tf.sequential(
+		[
+			//layers
+		]
+	);
+
+	//transform training data into tensors
+
+	//fit
+
+	//save
 }
 
 function classify() {
+	// every x frames classify the current phonetic input against the CNN.
 	return 'N/A';
 }
