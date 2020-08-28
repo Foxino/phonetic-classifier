@@ -1,4 +1,4 @@
-let mic, fft, train, label;
+let mic, fft, train, label, phocnn;
 
 let training_x = [],
 	training_y = [],
@@ -12,14 +12,17 @@ let sinputShape = Math.sqrt(inputSize);
 let numClasses = classes.length;
 
 // Training Paras
-const epochs = 40;
+const epochs = 400;
 const learningRate = 0.2;
 const testRatio = 0.2;
-const batchSize = 10;
+const batchSize = 40;
 
 // Classification Paras
 const predictionConfidence = 0.7;
 const predictionInterval = 0;
+
+//stuff
+let train_t_x, train_t_y, test_t_x, test_t_y;
 
 function setup() {
 	train = [];
@@ -57,88 +60,84 @@ function draw() {
 }
 
 function saveP() {
-	var cl = document.getElementById('ph').selectedIndex;
+	let arr = [];
+	let cl = document.getElementById('ph').selectedIndex;
+	for (let x = 0; x < numClasses; x++) {
+		if (cl == x) {
+			arr.push(1);
+		} else {
+			arr.push(0);
+		}
+	}
 	var spect = fft.analyze();
 	train.push(spect);
-	label.push(cl);
+	label.push(arr);
 }
 
-function train_nn() {
-	// create a conv neural network
-	const m = tf.sequential({
-		layers: [
-			tf.layers.conv1d({
-				inputShape: [ 1, sinputShape, sinputShape ],
-				activation: 'relu',
-				kernelSize: 3,
-				filters: 64
-			}),
-			tf.layers.conv2d({
-				filters: 64,
-				activation: 'relu',
-				kernelSize: [ 3, 3 ]
-			}),
-			tf.layers.maxPooling2d({
-				poolSize: [ 2, 2 ],
-				strides: [ 2, 2 ]
-			}),
-			tf.layers.conv2d({
-				filters: 64,
-				activation: 'relu',
-				kernelSize: [ 3, 3 ]
-			}),
-			tf.layers.conv2d({
-				filters: 64,
-				activation: 'relu',
-				kernelSize: [ 3, 3 ]
-			}),
-			tf.layers.maxPooling2d({
-				poolSize: [ 2, 2 ],
-				strides: [ 2, 2 ]
-			}),
-			tf.layers.conv2d({
-				filters: 128,
-				activation: 'relu',
-				kernelSize: [ 3, 3 ]
-			}),
-			tf.layers.conv2d({
-				filters: 128,
-				activation: 'relu',
-				kernelSize: [ 3, 3 ]
-			}),
-			tf.layers.maxPooling2d({
-				poolSize: [ 2, 2 ],
-				strides: [ 2, 2 ]
-			}),
-			tf.layers.flatten(),
-			tf.layers.dense({
-				units: 1024,
-				activation: 'relu'
-			}),
-			tf.layers.dense({
-				units: 1024,
-				activation: 'relu'
-			}),
-			tf.layers.dense({
-				units: numClasses,
-				activation: 'softmax'
-			})
-		]
-	});
-	//m.summary();
+function createCNN() {
+	// creates a convoluted neural network
+	const model = tf.sequential();
 
-	const optimizer = 'rmsprop';
+	//input layer
+	model.add(
+		tf.layers.conv2d({
+			inputShape: [ sinputShape, sinputShape, 1 ],
+			kernelSize: 3,
+			filters: 16,
+			activation: 'relu'
+		})
+	);
 
-	m.compile({
-		optimizer,
-		loss: 'categoricalCrossentropy',
-		metrics: [ 'accuracy' ]
-	});
+	model.add(
+		tf.layers.maxPooling2d({
+			poolSize: 2,
+			strides: 2
+		})
+	);
 
-	m.summary();
+	model.add(
+		tf.layers.conv2d({
+			kernelSize: 3,
+			filters: 32,
+			activation: 'relu'
+		})
+	);
 
-	// x = data, y = label
+	model.add(
+		tf.layers.maxPooling2d({
+			poolSize: 2,
+			strides: 2
+		})
+	);
 
+	model.add(
+		tf.layers.conv2d({
+			kernelSize: 3,
+			filters: 32,
+			activation: 'relu'
+		})
+	);
+
+	model.add(tf.layers.flatten({}));
+
+	model.add(
+		tf.layers.dense({
+			units: 64,
+			activation: 'relu'
+		})
+	);
+
+	model.add(
+		tf.layers.dense({
+			units: numClasses,
+			activation: 'softmax'
+		})
+	);
+
+	return model;
+}
+
+function loadData() {
 	for (let x = 0; x < train.length; x++) {
 		// randomly split the test/training data
 		if (Math.random() < testRatio) {
@@ -151,30 +150,64 @@ function train_nn() {
 			training_y.push(label[x]);
 		}
 	}
+	//load into tensors
+	train_t_x = tf.tensor(training_x, [ training_x.length, 32, 32, 1 ]);
+	train_t_y = tf.tensor(training_y);
 
-	console.log('Fitting Data.. ');
+	test_t_x = tf.tensor(testing_x, [ testing_x.length, 32, 32, 1 ]);
+	test_t_y = tf.tensor(testing_y);
+}
 
-	const train_t_x = tf.tensor(training_x, [ training_x.length, 32, 32 ]);
-	const train_t_y = tf.tensor(training_y);
+function train_nn() {
+	console.log('Creating Model.. ');
+	let cnn = createCNN();
+	console.log('Loading Data into Tensors.. ');
+	loadData();
 
-	const test_t_x = tf.tensor(testing_x, [ testing_x.length, 32, 32 ]);
-	const test_t_y = tf.tensor(testing_y);
+	const optimizer = 'rmsprop';
 
-	//fit
-
-	fit(train_t_x, train_t_y, test_t_x, test_t_y, m).then(() => {
-		console.log('Complete');
+	cnn.compile({
+		optimizer,
+		loss: 'categoricalCrossentropy',
+		metrics: [ 'accuracy' ]
 	});
 
-	//save
+	fit(train_t_x, train_t_y, test_t_x, test_t_y, cnn).then(() => {
+		let t = cnn.predict(test_t_x);
+		console.log('Test Data');
+		t.print();
+		test_t_y.print();
+		phocnn = cnn;
+		console.log('We good homie?');
+	});
+
+	// save model to disk once done
 }
 
 async function fit(train_x, train_y, test_x, test_y, model) {
-	const response = await model.fit(train_x, train_y);
-	console.log(response);
+	const response = await model.fit(train_x, train_y, {
+		batchSize,
+		testRatio,
+		epochs: epochs,
+		callbacks: {
+			onBatchEnd: async (batch, logs) => {
+				console.log(logs);
+				await tf.nextFrame();
+			},
+			onEpochEnd: async (epoch, logs) => {
+				console.log(logs);
+				await tf.nextFrame();
+			}
+		}
+	});
 }
 
 function classify() {
-	// every x frames classify the current phonetic input against the CNN.
-	return 'N/A';
+	if (typeof phocnn !== 'undefined') {
+		//return prediction based on highest confidence
+		//let p = phocnn.predict(tf.tensor(fft.analyze(), [ 1, 32, 32, 1 ]));
+		//clear tensors from gpu
+	} else {
+		return 'N/A';
+	}
 }
