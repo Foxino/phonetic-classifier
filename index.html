@@ -4,17 +4,37 @@
     <script src="https://cdn.jsdelivr.net/npm/p5@1.1.9/lib/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/addons/p5.sound.js" integrity="sha512-KxzVm+IqxNNq0+SzT/zzd5PHxY4LPrN+v5gZJ6+JKqjeU3Cr4y/djAg5eNlKDWurn1SeKZpql/yeOMWblMSzOg==" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
-    <script src="phoclass.js"></script>
-    <title>Phonetic Classification</title>
+    <script src="dataset_audio.js"></script>
+    <script src="rnn.js"></script>
+    <script src="cnn.js"></script>
+    <script src="soundRecord.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Classification Test</title>
+    <style>
+        .p5Canvas{
+            position: absolute;
+            right: 1vw;
+            top: 10vh;
+        }
+    </style>
 </head>
 <body>
-    <button onclick="saveP()">Save</button>
-    <select name="Phonetics" id="ph">
-        <option value="aah">AAAH</option>   
-        <option value="eee">EEE</option>
-        <option value="i">I</option>
-    </select>
-    <button onclick="train_nn()">Train</button>
-    <span id="result"> - </span>
+    <span style="font-size: 54px; position: absolute; left: 10vw; top: 15vh;" id="Result"> Please wait, Training CNN... </span>
+    <div>
+        <img height="350" width="350" style="position: absolute; left: 5vw; top:30vh" src="image0.png" alt="Sub-IPA Chart">
+    </div>
 </body>
+
+<script>
+   // const x = rnnModel();
+
+   var complete = false;
+
+   const m = cnnModel();
+
+
+
+
+</script>
 </html>
