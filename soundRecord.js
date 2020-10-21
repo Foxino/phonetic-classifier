@@ -36,6 +36,23 @@ function classify(audio){
 	if (complete) {
 		let x = cnn.predict(tf.tensor(audio,[1,32,32,1]).div(255)).dataSync();
 		document.querySelector('#Result').innerHTML = mouthShapes[allMax(x)];
+		switch (allMax(x)[0]) {
+			case 1:
+				document.getElementById("Mouth").src = "A1.png"
+				break;
+			case 2:
+				document.getElementById("Mouth").src = "A2.png"
+				break;
+			case 3:
+				document.getElementById("Mouth").src = "O1.png"
+				break;
+			case 4:
+				document.getElementById("Mouth").src = "O2.png"
+				break;
+			default:
+				document.getElementById("Mouth").src = "N.png"
+				break;
+		}
 
 	}
 }
